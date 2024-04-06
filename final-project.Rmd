@@ -1,6 +1,6 @@
 ---
 title: "ASRM 432 Final Project"
-names: "Timmy Chinzorig,"
+names: "Timmy Chinzorig, Molly Yetter"
 output: pdf_document
 date: "`r Sys.Date()`"
 ---
