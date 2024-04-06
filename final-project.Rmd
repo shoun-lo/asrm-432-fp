@@ -1,0 +1,10 @@
+---
+title: "ASRM 432 Final Project"
+output: pdf_document
+date: "`r Sys.Date()`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
