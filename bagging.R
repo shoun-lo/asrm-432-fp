@@ -17,35 +17,31 @@ target_data = read_delim(url3, delim = "\t", escape_double = FALSE, col_names = 
 #set seed to be 7
 set.seed(7)
 
-#first hundred observations.
-train_selected = train_data[1:100, ]
+#split the training data
+train_ind = sample(seq_len(nrow(train_data)), size = 4000)
+train = train_data[train_ind,]
+test = train_data[-train_ind,]
 
 ##Bagging
-#apply bagging method (replace train_selected with train_data)
-bagging = randomForest(as.factor(train_selected$X86) ~., data = train_selected, 
+
+#apply bagging method
+bagging = randomForest(as.factor(train$X86) ~., data = train, 
                        mtry = 85, importance = TRUE)
 
-#plot out-of-bag error to find the best ntrees
+#plot out-of-bag error to find the best ntree
 plot(bagging, col = "darkorange")
-#ntree = 340 looks decent
-abline(v = 340)
+#ntree = 240 looks decent
+abline(v = 240)
 
 #bagging with the best ntree
-bagging2 = randomForest(as.factor(train_selected$X86) ~., data = train_selected, 
-                        ntree = 340, mtry = 85, importance = TRUE)
+bagging = randomForest(as.factor(train$X86) ~., data = train, 
+                        ntree = 240, mtry = 85, importance = TRUE)
 
-bagging_pred = predict(bagging2, newdata = test_data)
+bagging_pred = predict(bagging, newdata = test)
 
-#confusion matrix and accuracy (training data)
-conf_tab = bagging2$confusion[, 1:2]
-sum(diag(conf_tab)) / sum(conf_tab)
-#or
-conf_tab = table(Predicted = bagging_pred, Actual = train_data$X86[1:4000])
-sum(diag(conf_tab)) / sum(conf_tab)
-
-#confusion matrix and accuracy (target data)
-conf_tab2 = table(Predicted = bagging_pred, Actual = target_data$X1)
-sum(diag(conf_tab2)) / sum(conf_tab2)
+#confusion matrix and accuracy (over the training data)
+conf_tab_bg = table(Predicted = bagging_pred, Actual = test$X86)
+sum(diag(conf_tab_bg)) / sum(conf_tab_bg)
 
 #importance of vars. (Mean Decreasing Accuracy)
 importance = importance(bagging)
@@ -54,56 +50,44 @@ importance = sort(importance[,3], decreasing = TRUE)
 head(importance, 5)
 # X33, X6, X41, X29, X24
 
+#confusion matrix and accuracy (over the target data)
+bagging_pred_target = predict(bagging, newdata = test_data)
+conf_tab_bg_actual = table(Predicted = bagging_pred_target, Actual = target_data$X1)
+sum(diag(conf_tab_bg_actual)) / sum(conf_tab_bg_actual)
+
 ##Random Forest (mtry < 85)
 
-#tune mtry
-tuned = tuneRF(x = train_selected[, -86], y = as.factor(train_selected$X86), 
-               ntreeTry = 340, mtryStart = 42, stepFactor = 1.5, trace = FALSE)
+#tune mtry with ntree with ntree = 240
+tuned = tuneRF(x = train[, -86], y = as.factor(train$X86), 
+               ntreeTry = 240, mtryStart = 42, stepFactor = 1.5, trace = FALSE)
 
-tuned_mtry = as_tibble(tuned) |>
-  arrange(OOBError) |>
-  select(mtry) |>
-  head(1) |>
-  pull(mtry)
+#mtry's = 28, 42, 63
+mtry_values = c(28, 42, 63)
 
-#cross-valid. mtry
-cv_results = rfcv(trainx = train_selected[, -86], trainy = as.factor(train_selected$X86), 
-               mtryStart = 2, mtryEnd = 85, stepFactor = 1.5, scale = "log")
-cv_mtry = cv_results$n.var[which.min(cv_results$error.cv)]
+#initialize accuracy vector
+accuracy_results = numeric(length(mtry_values))
+
+for (i in seq_along(mtry_values)) {
   
+  #train rf model with mtry
+  rf_model = randomForest(as.factor(X86) ~ ., data = train, mtry = mtry_values[i])
+  
+  #predict on the test
+  rf_pred = predict(rf_model, newdata = test)
+  
+  #calculate accuracy
+  accuracy = mean(rf_pred == test$X86)
+  
+  #store accuracy
+  accuracy_results[i] = accuracy
+}
 
-#choose ntrees = 340 with tuned mtry
-rf_tuned = randomForest(as.factor(train_selected$X86) ~., data = train_selected, 
-                       ntree = 340, mtry = tuned_mtry, importance = TRUE)
+accuracy_results
+# 28 seems to be the best
 
-#choose ntrees =3 40 with cv mtry
-rf_cv = randomForest(as.factor(train_selected$X86) ~., data = train_selected, 
-                       ntree = 340, mtry = cv_mtry, importance = TRUE)
+rf_pred_target = predict(rf_model, newdata = test_data)
 
-#random forest predictions (w/ tuned)
-rf_tuned_pred = predict(bagging_tuned, newdata = test_data)
+#confusion matrix and accuracy (over the target data)
+conf_tab_rf_target = table(Predicted = rf_pred_target, Actual = target_data$X1)
+sum(diag(conf_tab_rf_target)) / sum(conf_tab_rf_target)
 
-#confusion matrix and accuracy (training data) (go over with prof or ta)
-conf_tab_tuned = rf_tuned$confusion[, 1:2]
-sum(diag(conf_tab_tuned)) / sum(conf_tab_tuned)
-#or
-conf_tab_tuned = table(Predicted = bagging_tuned_pred, Actual = train_data$X86[1:4000])
-sum(diag(conf_tab_tuned)) / sum(conf_tab_tuned)
-
-#confusion matrix and accuracy (target data)
-conf_tab_tuned2 = table(Predicted = bagging_tuned_pred, Actual = target_data$X1)
-sum(diag(conf_tab_tuned2)) / sum(conf_tab_tuned2)
-
-#random forest predictions (w/ cv)
-rf_cv_pred = predict(rf_cv, newdata = test_data)
-
-#confusion matrix and accuracy (training data) (go over with prof or ta)
-conf_tab_cv = rf_cv$confusion[, 1:2]
-sum(diag(conf_tab_cv)) / sum(conf_tab_cv)
-#or
-conf_tab_cv = table(Predicted = rf_cv_pred, Actual = train_data$X86[1:4000])
-sum(diag(conf_tab_cv)) / sum(conf_tab_cv)
-
-#confusion matrix and accuracy (target data)
-conf_tab2_cv = table(Predicted = rf_cv_pred, Actual = target_data$X1)
-sum(diag(conf_tab2_cv)) / sum(conf_tab2_cv)
