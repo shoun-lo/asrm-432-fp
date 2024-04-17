@@ -64,11 +64,14 @@ print(conf_matrix)
 accuracy <- sum(diag(conf_matrix)) / sum(conf_matrix)
 cat("Accuracy:", accuracy, "\n")
 
-# Plotting the results using ggplot2
-# For demonstration purposes, used the first two variables
-ggplot(train_data, aes(x = train_data$X1, y = train_data$X2,
-                       color = as.factor(train_data$X86))) +
-  geom_point() +
-  labs(title = "KNN Classification (First Two Variables)",
-       x = "Variable 1", y = "Variable 2", color = "Target") +
+# Plot accuracy versus different K values
+accuracy_plot <- ggplot(knn_train$results,
+                        aes(x = knn_train$results$k, y = knn_train$results$Accuracy)) +
+  geom_line() +
+  geom_point(shape = 21, fill = "blue") +
+  labs(title = "KNN Model Accuracy for Different K Values",
+       x = "Number of Neighbors (K)",
+       y = "Cross-Validated Accuracy") +
   theme_minimal()
+
+print(accuracy_plot)
