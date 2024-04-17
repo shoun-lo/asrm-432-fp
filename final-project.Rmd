@@ -25,6 +25,18 @@ target_data = read_delim(url3, delim = "\t", escape_double = FALSE, col_names = 
 train_ind = sample(seq_len(nrow(train_data)), size = 4000)
 train = train_data[train_ind,]
 test = train_data[-train_ind,]
-
 ```
+
+# Problem and Literature Review
+
+
+## Classification Methods
+
+### Bagging and Random Forest
+
+### Linear Discriminant Analysis
+
+### K-Nearest Neighbors
+
+### Logistic Regression
 
