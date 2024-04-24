@@ -21,35 +21,59 @@ training_data = train_data
 #Set seed to 7
 set.seed(7)
 
+#split the training data
+train_indices = sample(seq_len(nrow(training_data)), size = 4000)
+train = train_data[train_indices,]
+test = train_data[-train_indices,]
+
 #Looking through the data, we find that the variables don't have their names assigned to the columns yet so we get the names off 
 #of the website dictionary and set the column names accordingly.
-colnames(training_data) = c("MOSTYPE", "MAANTHUI", "MGEMOMV", "MGEMLEEF", "MOSHOOFD", "MGODRK", "MGODPR", "MGODOV", "MGODGE", "MRELGE", "MRELSA", "MRELOV", "MFALLEEN", "MFGEKIND", "MFWEKIND", "MOPLHOOG", "MOPLMIDD", "MOPLLAAG", "MBERHOOG", "MBERZELF", "MBERBOER", "MBERMIDD", "MBERARBG", "MBERARBO", "MSKA", "MSKB1", "MSKB2", "MSKC", "MSKD", "MHHUUR", "MHKOOP", "MAUT1", "MAUT2", "MAUT0", "MZFONDS", "MZPART", "MINKM30", "MINK3045", "MINK4575", "MINK7512", "MINK123M", "MINKGEM", "MKOOPKLA", "PWAPART", "PWABEDR", "PWALAND", "PPERSAUT", "PBESAUT", "PMOTSCO", "PVRAAUT", "PAANHANG", "PTRACTOR", "PWERKT", "PBROM", "PLEVEN", "PPERSONG", "PGEZONG", "PWAOREG", "PBRAND", "PZEILPL", "PPLEZIER", "PFIETS", "PINBOED", "PBYSTAND", "AWAPART", "AWABEDR", "AWALAND", "APERSAUT", "ABESAUT", "AMOTSCO", "AVRAAUT", "AAANHANG", "ATRACTOR", "AWERKT", "ABROM", "ALEVEN", "APERSONG", "AGEZONG", "AWAOREG", "ABRAND", "AZEILPL", "APLEZIER", "AFIETS", "AINBOED", "ABYSTAND", "CARAVAN")
-colnames(training_data)
+#colnames(training_data) = c("MOSTYPE", "MAANTHUI", "MGEMOMV", "MGEMLEEF", "MOSHOOFD", "MGODRK", "MGODPR", "MGODOV", "MGODGE", "MRELGE", "MRELSA", "MRELOV", "MFALLEEN", "MFGEKIND", "MFWEKIND", "MOPLHOOG", "MOPLMIDD", "MOPLLAAG", "MBERHOOG", "MBERZELF", "MBERBOER", "MBERMIDD", "MBERARBG", "MBERARBO", "MSKA", "MSKB1", "MSKB2", "MSKC", "MSKD", "MHHUUR", "MHKOOP", "MAUT1", "MAUT2", "MAUT0", "MZFONDS", "MZPART", "MINKM30", "MINK3045", "MINK4575", "MINK7512", "MINK123M", "MINKGEM", "MKOOPKLA", "PWAPART", "PWABEDR", "PWALAND", "PPERSAUT", "PBESAUT", "PMOTSCO", "PVRAAUT", "PAANHANG", "PTRACTOR", "PWERKT", "PBROM", "PLEVEN", "PPERSONG", "PGEZONG", "PWAOREG", "PBRAND", "PZEILPL", "PPLEZIER", "PFIETS", "PINBOED", "PBYSTAND", "AWAPART", "AWABEDR", "AWALAND", "APERSAUT", "ABESAUT", "AMOTSCO", "AVRAAUT", "AAANHANG", "ATRACTOR", "AWERKT", "ABROM", "ALEVEN", "APERSONG", "AGEZONG", "AWAOREG", "ABRAND", "AZEILPL", "APLEZIER", "AFIETS", "AINBOED", "ABYSTAND", "CARAVAN")
+#colnames(training_data)
 
-is.factor(training_data$CARAVAN)
-training_data$CARAVAN = as.factor(training_data$CARAVAN)
+#Here we are going to check if our response variables X86 which is the caravan variable is classified as a factor or not. 
+is.factor(train$X86)
+#We have confirmed that every variable is considered a numeric in the data as is and for the sake of consistency we will not alter the data globaly and rather just modify within function calls.
+#
+heatmap_full = heatmap(as.matrix(train))
+summary(heatmap_full)
 
-
-#Going to try running a glm with all of the variables to see what happens. Storing this model in "logistic_model".
-logistic_model_caravan = glm(CARAVAN ~ ., data = training_data, family = "binomial")
+#Here we try running a glm with all of the variables to see what happens. Storing this model in "logistic_model_full".
+logistic_model_full = glm(X86 ~ ., data = train, family = "binomial")
 
 #Running a summary on "logistic_model".
-summary(logistic_model)
+summary(logistic_model_full)
 
 #Getting the correlation matrix
-cor_full = cor.test(training_data)
+#cor_full = cor.test(train)
 
 #Using this "full" model we proceed to see what the model would predict based off the training dataset. 
-glm_predict_caravan = predict(logistic_model_caravan, training_data, type = 'response')
-head(glm_predict_caravan)
+glm_predict_full = predict(logistic_model_full, test, type = 'response')
+head(glm_predict_full)
 
-#Classifying values that the predict function got above 0.5 as being TRUE and anything less to be FALSE.
-predicted_caravan = ifelse(glm_predict_caravan >= 0.5, 1, 0)
-head(predicted_caravan)
+#Classifying values that the predict function got above 0.5 as being TRUE or 1 and anything less to be FALSE or 0.
+predicted_caravan_full = ifelse(glm_predict_full >= 0.5, 1, 0)
+head(predicted_caravan_full)
 
-#Determining the accuracy of the model
-accuracy_full = mean(predicted_caravan==training_data$CARAVAN)
+#Determining the accuracy of the full model
+accuracy_full = mean(predicted_caravan_full==test$X86)
 print(accuracy_full)
+
+conf_tab_rf_target = table(Predicted = predicted_caravan_full, Actual = test$X86)
+sum(diag(conf_tab_rf_target)) / sum(conf_tab_rf_target)
+
+#Now we are going to try model selection with the forward stepwise process using BIC as our metric.
+train$X86 = factor(train$X86)
+forward_model_bic = step(glm(X86 ~ 1, data = train, family = "binomial"), 
+                           direction = "forward", k = log(nrow(train)), trace = 1)
+summary(forward_model_bic)
+
+#Now we're going to try best selection
+best_step_bic = step(glm(X86 ~ ., data = train, family = "binomial"),
+                                direction = "both", k = log(nrow(train)), trace = 1)
+summary(best_step_bic)
+
+#Holy cow that took a long time, but we got the Model and it included the variables X12, X18, X47, X59, and X82. 
 
 
 
