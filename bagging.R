@@ -101,5 +101,3 @@ rf_pred_target = predict(rf_model, newdata = test_data)
 #confusion matrix and accuracy (over the target data)
 conf_tab_rf_target = table(Predicted = rf_pred_target, Actual = target_data$X1)
 sum(diag(conf_tab_rf_target)) / sum(conf_tab_rf_target)
-
-
