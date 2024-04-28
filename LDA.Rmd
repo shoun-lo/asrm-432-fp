@@ -29,7 +29,6 @@ test = train_data[-train_ind,]
 
 ```{r}
 summary(train)
-
 ```
 
 
