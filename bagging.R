@@ -37,9 +37,11 @@ abline(v = 240)
 bagging = randomForest(as.factor(train$X86) ~., data = train, 
                         ntree = 240, mtry = 85, importance = TRUE)
 
+
+
 bagging_pred = predict(bagging, newdata = test)
 
-#confusion matrix and accuracy (over the training data)
+#confusion matrix and accuracy (over the testing data)
 conf_tab_bg = table(Predicted = bagging_pred, Actual = test$X86)
 sum(diag(conf_tab_bg)) / sum(conf_tab_bg)
 
@@ -47,8 +49,8 @@ sum(diag(conf_tab_bg)) / sum(conf_tab_bg)
 importance = importance(bagging)
 importance[, 3:4] = abs(importance[, 3:4])
 importance = sort(importance[,3], decreasing = TRUE)
-head(importance, 5)
-# X33, X6, X41, X29, X24
+head(importance, 10)
+
 
 #confusion matrix and accuracy (over the target data)
 bagging_pred_target = predict(bagging, newdata = test_data)
@@ -76,14 +78,23 @@ for (i in seq_along(mtry_values)) {
   rf_pred = predict(rf_model, newdata = test)
   
   #calculate accuracy
-  accuracy = mean(rf_pred == test$X86)
-  
+  conf_tab_33 = table(Predicted = rf_pred, Actual = test$X86)
+  print(conf_tab_33)
+  accuracy = sum(diag(conf_tab_33)) / sum(conf_tab_33)
+  print(accuracy)
   #store accuracy
   accuracy_results[i] = accuracy
 }
 
 accuracy_results
 # 28 seems to be the best
+
+rf_model_best = randomForest(as.factor(X86) ~ ., data = train, mtry = 28)
+
+importance_rf = as_tibble(importance(rf_model_best)) |>
+  rownames_to_column("Var") |>
+  arrange(desc(MeanDecreaseGini)) |>
+  head(10)
 
 rf_pred_target = predict(rf_model, newdata = test_data)
 
