@@ -41,6 +41,7 @@ plot(linearmod)
 #### Bagging
 ```{r, include=FALSE}
 #apply bagging method
+library(randomForest)
 bagging = randomForest(as.factor(train$X86) ~., data = train, 
                        mtry = 85, importance = TRUE)
 
@@ -291,6 +292,7 @@ cat("Precision:", precision, "\n")
 ### K-Nearest Neighbors
 ```{r}
 # Normalize the data since KNN uses distance metrics.
+library(class)
 normalize <- function(x) {
   return ((x - min(x)) / (max(x) - min(x)))
 }
