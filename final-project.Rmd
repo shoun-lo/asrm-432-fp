@@ -38,27 +38,26 @@ plot(linearmod)
 ## Classification Methods
 
 ### Bagging and Random Forest
+#### Bagging
 ```{r, include=FALSE}
 #apply bagging method
 bagging = randomForest(as.factor(train$X86) ~., data = train, 
                        mtry = 85, importance = TRUE)
-```
 
-```{r}
 #plot out-of-bag error to find the best ntree
 plot(bagging, col = "darkorange")
 #ntree = 240 looks decent
 abline(v = 240)
-```
 
-```{r, include = FALSE}
 #bagging with the best ntree
 bagging = randomForest(as.factor(train$X86) ~., data = train, 
                         ntree = 240, mtry = 85, importance = TRUE)
 
+
+
 bagging_pred = predict(bagging, newdata = test)
 
-#confusion matrix and accuracy (over the training data)
+#confusion matrix and accuracy (over the testing data)
 conf_tab_bg = table(Predicted = bagging_pred, Actual = test$X86)
 sum(diag(conf_tab_bg)) / sum(conf_tab_bg)
 
@@ -66,8 +65,8 @@ sum(diag(conf_tab_bg)) / sum(conf_tab_bg)
 importance = importance(bagging)
 importance[, 3:4] = abs(importance[, 3:4])
 importance = sort(importance[,3], decreasing = TRUE)
-head(importance, 5)
-# X33, X6, X41, X29, X24
+head(importance, 10)
+
 
 #confusion matrix and accuracy (over the target data)
 bagging_pred_target = predict(bagging, newdata = test_data)
@@ -75,9 +74,8 @@ conf_tab_bg_actual = table(Predicted = bagging_pred_target, Actual = target_data
 sum(diag(conf_tab_bg_actual)) / sum(conf_tab_bg_actual)
 ```
 
+#### Random Forest
 ```{r, include = FALSE}
-##Random Forest (mtry < 85)
-
 #tune mtry with ntree with ntree = 240
 tuned = tuneRF(x = train[, -86], y = as.factor(train$X86), 
                ntreeTry = 240, mtryStart = 42, stepFactor = 1.5, trace = FALSE)
@@ -97,19 +95,24 @@ for (i in seq_along(mtry_values)) {
   rf_pred = predict(rf_model, newdata = test)
   
   #calculate accuracy
-  accuracy = mean(rf_pred == test$X86)
-  
+  conf_tab_33 = table(Predicted = rf_pred, Actual = test$X86)
+  print(conf_tab_33)
+  accuracy = sum(diag(conf_tab_33)) / sum(conf_tab_33)
+  print(accuracy)
   #store accuracy
   accuracy_results[i] = accuracy
 }
-```
 
-```{r}
 accuracy_results
 # 28 seems to be the best
-```
 
-```{r}
+rf_model_best = randomForest(as.factor(X86) ~ ., data = train, mtry = 28)
+
+importance_rf = as_tibble(importance(rf_model_best)) |>
+  rownames_to_column("Var") |>
+  arrange(desc(MeanDecreaseGini)) |>
+  head(10)
+
 rf_pred_target = predict(rf_model, newdata = test_data)
 
 #confusion matrix and accuracy (over the target data)
