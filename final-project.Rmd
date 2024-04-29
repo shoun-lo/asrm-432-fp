@@ -29,6 +29,11 @@ test = train_data[-train_ind,]
 
 # Problem and Literature Review
 
+Applying linear model on the training split then plotting the results
+```{r}
+linearmod = lm(X86 ~., data = train)
+plot(linearmod)
+```
 
 ## Classification Methods
 
