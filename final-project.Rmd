@@ -289,6 +289,7 @@ cat("Precision:", precision, "\n")
 ```
 
 ### K-Nearest Neighbors
+```{r}
 # Normalize the data since KNN uses distance metrics.
 normalize <- function(x) {
   return ((x - min(x)) / (max(x) - min(x)))
@@ -347,8 +348,10 @@ accuracy_plot <- ggplot(knn_train$results,
   theme_minimal()
 
 print(accuracy_plot)
+```
 
 ### Logistic Regression
+```{r}
 #Looking through the data, we find that the variables don't have their names assigned to the columns yet so we get the names off 
 #of the website dictionary and set the column names accordingly.
 #colnames(training_data) = c("MOSTYPE", "MAANTHUI", "MGEMOMV", "MGEMLEEF", "MOSHOOFD", "MGODRK", "MGODPR", "MGODOV", "MGODGE", "MRELGE", "MRELSA", "MRELOV", "MFALLEEN", "MFGEKIND", "MFWEKIND", "MOPLHOOG", "MOPLMIDD", "MOPLLAAG", "MBERHOOG", "MBERZELF", "MBERBOER", "MBERMIDD", "MBERARBG", "MBERARBO", "MSKA", "MSKB1", "MSKB2", "MSKC", "MSKD", "MHHUUR", "MHKOOP", "MAUT1", "MAUT2", "MAUT0", "MZFONDS", "MZPART", "MINKM30", "MINK3045", "MINK4575", "MINK7512", "MINK123M", "MINKGEM", "MKOOPKLA", "PWAPART", "PWABEDR", "PWALAND", "PPERSAUT", "PBESAUT", "PMOTSCO", "PVRAAUT", "PAANHANG", "PTRACTOR", "PWERKT", "PBROM", "PLEVEN", "PPERSONG", "PGEZONG", "PWAOREG", "PBRAND", "PZEILPL", "PPLEZIER", "PFIETS", "PINBOED", "PBYSTAND", "AWAPART", "AWABEDR", "AWALAND", "APERSAUT", "ABESAUT", "AMOTSCO", "AVRAAUT", "AAANHANG", "ATRACTOR", "AWERKT", "ABROM", "ALEVEN", "APERSONG", "AGEZONG", "AWAOREG", "ABRAND", "AZEILPL", "APLEZIER", "AFIETS", "AINBOED", "ABYSTAND", "CARAVAN")
@@ -460,4 +463,5 @@ precision_best <- TP_best / (TP_best + FP_best)
 cat("Specificity:", specificity_best, "\n")
 cat("Sensitivity:", sensitivity_best, "\n")
 cat("Precision:", precision_best, "\n")
+```
 
